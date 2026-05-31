@@ -307,6 +307,8 @@ interface UserDBRow {
   is_verified: boolean;
   biometric_confidence: number;
   verified_at: string;
+  name?: string;
+  password?: string;
 }
 
 interface CareerQueryRow {
@@ -323,6 +325,8 @@ const db_users: UserDBRow[] = [
   {
     id: "usr_001",
     email: "ankurnegi68@gmail.com",
+    name: "Ankur Negi",
+    password: "password123",
     is_verified: false,
     biometric_confidence: 0,
     verified_at: ""
@@ -330,6 +334,8 @@ const db_users: UserDBRow[] = [
   {
     id: "usr_998",
     email: "sarah.connor@cyberdyne.com",
+    name: "Sarah Connor",
+    password: "password123",
     is_verified: true,
     biometric_confidence: 0.985,
     verified_at: "2026-05-31T10:15:30Z"
@@ -337,6 +343,8 @@ const db_users: UserDBRow[] = [
   {
     id: "usr_999",
     email: "neo.anderson@metacortex.com",
+    name: "Thomas Anderson",
+    password: "password123",
     is_verified: true,
     biometric_confidence: 0.994,
     verified_at: "2026-05-31T11:45:00Z"
@@ -369,6 +377,55 @@ const db_career_queries: CareerQueryRow[] = [
 // Healthcheck
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", aiEnabled: !!ai });
+});
+
+// User Registration endpoint
+app.post("/api/auth/register", (req, res) => {
+  const { email, name, password } = req.body;
+  if (!email || !name || !password) {
+    return res.status(400).json({ error: "All registration fields (email, name, password) are required" });
+  }
+
+  const existing = db_users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (existing) {
+    return res.status(400).json({ error: "A user with this email already exists" });
+  }
+
+  const newUser: UserDBRow = {
+    id: `usr_${Math.random().toString(36).substring(2, 7)}`,
+    email: email.toLowerCase(),
+    name,
+    password,
+    is_verified: false,
+    biometric_confidence: 0,
+    verified_at: ""
+  };
+
+  db_users.push(newUser);
+  res.json({ success: true, user: { id: newUser.id, email: newUser.email, name: newUser.name } });
+});
+
+// Credentials check before biometric verification
+app.post("/api/auth/signin-check", (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+
+  const user = db_users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (!user) {
+    return res.status(401).json({ error: "No profile found with this email" });
+  }
+
+  if (user.password !== password) {
+    return res.status(401).json({ error: "Incorrect password credentials" });
+  }
+
+  res.json({
+    success: true,
+    needs_camera_verification: true,
+    user: { id: user.id, email: user.email, name: user.name || "User" }
+  });
 });
 
 // Database schema and record logs endpoint

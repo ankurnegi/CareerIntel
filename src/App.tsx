@@ -31,7 +31,14 @@ import { FeaturesGrid } from "./components/FeaturesGrid";
 import { AIAdvisorChat } from "./components/AIAdvisorChat";
 import { BiometricVerification } from "./components/BiometricVerification";
 import { DBConsole } from "./components/DBConsole";
+import { AuthPage } from "./components/AuthPage";
 import { DiagnosticResult } from "./types";
+
+interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+}
 
 // Standard preset options to simulate or run diagnostic with single click
 const PRESET_RESUMES = {
@@ -124,6 +131,16 @@ export default function App() {
   // Selector value tracking
   const [selectedSector, setSelectedSector] = useState<string>("Product Management");
 
+  // User Session Authentication State
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    try {
+      const savedUser = localStorage.getItem("auth_user");
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   // Biometric validation state
   const [isVerified, setIsVerified] = useState<boolean>(() => {
     try {
@@ -132,7 +149,24 @@ export default function App() {
       return false;
     }
   });
-  const [biometricConfidence, setBiometricConfidence] = useState<number>(0.982);
+  const [biometricConfidence, setBiometricConfidence] = useState<number>(() => {
+    try {
+      const savedConfidence = localStorage.getItem("biometric_confidence");
+      return savedConfidence ? parseFloat(savedConfidence) : 0.982;
+    } catch (e) {
+      return 0.982;
+    }
+  });
+
+  const handleSignOut = () => {
+    try {
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("biometric_verified");
+      localStorage.removeItem("biometric_confidence");
+    } catch (e) {}
+    setCurrentUser(null);
+    setIsVerified(false);
+  };
 
   // STATEFUL BOOKMARK LIST (Pivot Opportunities)
   const [savedOpportunities, setSavedOpportunities] = useState<{role: string, likelihood: string, why: string}[]>(() => {
@@ -304,6 +338,23 @@ export default function App() {
     } catch (e) {}
   };
 
+  if (!currentUser) {
+    return (
+      <AuthPage 
+        onSuccess={(user, confidence) => {
+          setCurrentUser(user);
+          setIsVerified(true);
+          setBiometricConfidence(confidence);
+          try {
+            localStorage.setItem("auth_user", JSON.stringify(user));
+            localStorage.setItem("biometric_verified", "true");
+            localStorage.setItem("biometric_confidence", confidence.toString());
+          } catch (e) {}
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f2ee] text-zinc-800 selection:bg-blue-200 selection:text-zinc-900 antialiased overflow-x-hidden relative font-sans">
       
@@ -324,17 +375,29 @@ export default function App() {
           </div>
 
           <div className="flex items-center space-x-4">
+            {currentUser && (
+              <div className="flex items-center space-x-2 border-r border-[#f4f2ee] pr-3 select-none">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-[#0a66c2] via-purple-600 to-blue-500 text-white flex items-center justify-center font-black text-xs shadow-inner">
+                  {currentUser.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="hidden sm:block text-left text-[11px] leading-tight text-zinc-700">
+                  <span className="font-bold block">{currentUser.name}</span>
+                  <span className="text-zinc-550 block text-[9px] font-mono">{currentUser.email}</span>
+                </div>
+              </div>
+            )}
+
             <div className="hidden md:flex items-center space-x-1.5 bg-zinc-50 border border-zinc-200 px-3 py-1 rounded-full text-[10px] text-zinc-650 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Simulated Cloud DB Connected</span>
+              <span>Secure Session Verified</span>
             </div>
             
-            <a 
-              href="#career-command-center"
-              className="text-xs font-bold px-3 py-1.5 rounded-full text-zinc-700 bg-zinc-100 border border-zinc-300 hover:bg-zinc-200 transition-colors cursor-pointer"
+            <button 
+              onClick={handleSignOut}
+              className="text-xs font-bold px-3.5 py-1.5 rounded-full text-red-650 bg-red-50 border border-red-200 hover:bg-red-100 transition-all cursor-pointer active:scale-95"
             >
-              Go to Sandbox
-            </a>
+              Sign Out
+            </button>
           </div>
 
         </div>
