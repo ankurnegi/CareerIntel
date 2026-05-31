@@ -1,0 +1,6 @@
+{
+  "name": "AI Career Intelligence",
+  "description": "Premium SaaS landing page and interactive Career Command Center dashboard with integrated Career Diagnostic resume scans and an automated AI Career Advisor.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
