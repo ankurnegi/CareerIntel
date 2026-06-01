@@ -132,6 +132,39 @@ export const BiometricVerification: React.FC<BiometricVerificationProps> = ({
         return;
       }
 
+      // Check physical camera feed brightness/integrity
+      let livenessPassed = true;
+      if (hasCamera && !permissionBlocked && videoRef.current) {
+        try {
+          const checkCanvas = document.createElement("canvas");
+          checkCanvas.width = 50;
+          checkCanvas.height = 50;
+          const ctx = checkCanvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(videoRef.current, 0, 0, 50, 50);
+            const pixels = ctx.getImageData(0, 0, 50, 50).data;
+            let sum = 0;
+            for (let i = 0; i < pixels.length; i += 4) {
+              sum += (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+            }
+            const avgBrightness = sum / (50 * 50);
+            // Rejects pure black or blocked feeds where webcam is open but stream is dormant/blank
+            if (avgBrightness < 15) {
+              livenessPassed = false;
+            }
+          }
+        } catch (e) {
+          console.warn("Liveness frame analyzer skipped in background", e);
+        }
+      }
+
+      if (!livenessPassed) {
+        stopCameraStream();
+        setScanState("failed");
+        setFailReason("Liveness Check Failed: Poor lighting or no face detected.");
+        return;
+      }
+
       if (currentStepIdx < LIVENESS_CHALLENGES.length - 1) {
         setCurrentStepIdx((prev) => prev + 1);
         setProgressVal(0);

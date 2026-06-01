@@ -31,10 +31,30 @@ export interface DiagnosticResult {
   pivotOpportunities: PivotOpportunity[];
   atsInsights: string[];
   isMock?: boolean;
+  isValid?: boolean;
 }
 
 export interface Message {
   id: string;
   role: "user" | "assistant";
   content: string;
+}
+
+export interface RoadmapPhase {
+  title: string;
+  description: string;
+  milestones: string[];
+  certification: string;
+  estimatedHours: number;
+}
+
+export interface LearningRoadmap {
+  skillGap: string;
+  targetRole: string;
+  milestones: {
+    day30: RoadmapPhase;
+    day90: RoadmapPhase;
+    day180: RoadmapPhase;
+  };
+  generalSummary: string;
 }

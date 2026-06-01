@@ -287,8 +287,36 @@ export const AIAdvisorChat: React.FC<AIAdvisorChatProps> = ({ currentRole }) => 
         </div>
       )}
 
-      {/* 4. Terminal Command Input */}
-      <div className="bg-zinc-50 border-t border-zinc-200 p-3.5">
+      {/* 4. Terminal Command Input with quick-action interactive suggestion pills */}
+      <div className="bg-zinc-50 border-t border-zinc-200 p-3.5 space-y-3">
+        {/* Suggestion Pills */}
+        <div className="flex flex-wrap gap-2 text-[10.5px] font-sans font-bold select-none">
+          <button
+            type="button"
+            onClick={() => handleSendMessage("Start a professional mock interview simulation for me.")}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-[#0a66c2] hover:bg-blue-100 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+          >
+            🎯 Testing Interview
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSendMessage("What suggestions and calibration strategies do you have to optimize my ATS matching probability?")}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-full border border-purple-200 bg-purple-50/40 text-purple-700 hover:bg-purple-100/50 transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+          >
+            💡 Career Suggestions
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSendMessage("Explain how the salary dual calibration chart benchmarks my professional index.")}
+            disabled={loading}
+            className="px-3 py-1.5 rounded-full border border-zinc-200 bg-white text-zinc-700 hover:bg-[#f4f2ee] transition-colors cursor-pointer flex items-center gap-1 shadow-sm"
+          >
+            ❓ Ask Questions
+          </button>
+        </div>
+
         <form 
           onSubmit={(e) => {
             e.preventDefault();
